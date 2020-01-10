@@ -1,4 +1,4 @@
-# Chapter1
+# Chapter 1
 ## Tensors, Operations, Variables and Automatic Differentiation
 
 In this chapter, we will introduce the bare minimum lower level Tensorflow APIs to get started building and training models.  
@@ -16,8 +16,7 @@ tf.random.set_seed(42)
 > 2.0.0
 > ```
 
-<a name="tensors"></a>
-###  1. Tensors
+### 1. Tensors {#tensors}
 Tensors are the objects that flow through operations(i.e., they are the inputs and the same time outputs of operations). They are N-dimensional arrays that hold elements of the same data type. The tensor objects in Tensorflow all have the shape and dtype properties, where shape is the number of elements that the tensor houses in each dimension, and dtype is the data type that all the elements within the tensor belong to.  
 
 Let's create some tensors from python and numpy objects using [`tf.constant`](https://www.tensorflow.org/api_docs/python/tf/constant) and see their shapes and dtypes.
@@ -111,8 +110,7 @@ print(x_gpu.device)
 
 *Note we can actually do `x = x.cpu('0')` or `x = x.gpu('0')` to achieve the same, but these two are deprecating.*  
 
-<a name="operations"></a>
-### 2. Operations
+### 2. Operations {#operations}
 Operations takes in tensors and computes output tensors. Both [`tf.shape`](https://www.tensorflow.org/api_docs/python/tf/shape) and [`tf.cast`](https://www.tensorflow.org/api_docs/python/tf/dtypes/cast) we saw earlier are actually tensor operations. Tensorflow provides a rich set of operations around tensors and these operations have routines for gradient computing built in.
 
 Basic math operators in Python are overloaded by corresponding tensor operations. For example:
@@ -160,8 +158,7 @@ pprint(matrix[tf.newaxis, 1, :2])
 > <tf.Tensor: id=55, shape=(1, 2), dtype=int8, numpy=array([[3, 4]], dtype=int8)>
 > ```
 
-<a name="variables"></a>
-### 3. Variables
+### 3. Variables {#variables}
 Tensors are immutable, the values in tensors can't be updated in-place. Variables are just like Tensors in terms of as inputs to operations, but with the in-place value update methods.  
 
 We can create variables with [`tf.Variable`](https://www.tensorflow.org/api_docs/python/tf/Variable).
@@ -216,8 +213,7 @@ pprint(v)
 
 Variables are typically used to represent the parameters and the states of the model, whereas the inputs, intermediate results, and outputs are Tensors.  
 
-<a name="autodiff"></a>
-### 4. Automatic Differentiation
+### 4. Automatic Differentiation {#autodiff}
 Automatic differentiation is the implementation of the backpropagation algorithm which allows us to compute gradients of the loss function with respect to the model's parameters through chain rule. To do so, we need to keep track of the tensors and operations along the way. In Tensorflow we use the [`tf.GradientTape`](https://www.tensorflow.org/api_docs/python/tf/GradientTape) context to trace(recording/taping) what's happened inside, so that we can calculate the gradients afterward with the `.gradient()` from the tape object.
 ```python
 a = tf.Variable([4], dtype=tf.float32)
@@ -289,8 +285,7 @@ del tape
 > [<tf.Tensor: id=197, shape=(1,), dtype=float32, numpy=array([3.], dtype=float32)>]
 > ```
 
-<a name="linear"></a>
-### 5. Linear Regression
+### 5. Linear Regression {#linear}
 With tensors, variables, operations and automatic differentiation, we can start building models. Let's train a linear regression model with the gradient descent algorithm.  
 ```python
 # ground truth

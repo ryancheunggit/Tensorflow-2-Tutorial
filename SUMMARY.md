@@ -8,10 +8,10 @@
     + [Automatic Differentiation](chapter1.md#autodiff)
     + [Linear Regression](chapter1.md#linear)
 2. [AutoGraph](chapter2.md)
-    + AutoGraph
-    + Functions
-    + Linear Regression Revisited
-    + Caveats
+    + [AutoGraph](chapter2.md#autograph)
+    + [Functions](chapter2.md#function)
+    + [Linear Regression Revisited](chapter2.md#linear)
+    + [Caveats](chapter2.md#caveats)
 3. [Models, Layers and Activations](chapter3.md)
     + Models
     + Layers
