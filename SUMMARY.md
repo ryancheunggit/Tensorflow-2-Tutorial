@@ -2,11 +2,11 @@
 
 0. [Preface](README.md)
 1. [Tensors, Operations, Variables and Automatic Differentiation](chapter1.md)
-    + Tensors
-    + Operations
-    + Variables
-    + Automatic Differentiation
-    + Linear Regression
+    + [Tensors](chapter1.html#tensors)
+    + [Operations](chapter1.html#operations)
+    + [Variables](chapter1.html#variables)
+    + [Automatic Differentiation](chapter1.html#autodiff)
+    + [Linear Regression](chapter1.html#linear)
 2. [AutoGraph](chapter2.md)
     + AutoGraph
     + Functions
