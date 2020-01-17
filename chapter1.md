@@ -11,7 +11,6 @@ from pprint import pprint
 print(tf.__version__)
 tf.random.set_seed(42)
 ```
-> output
 > ```Console
 > 2.0.0
 > ```
@@ -26,7 +25,6 @@ vector = tf.constant([1, 2, 3], dtype=tf.float32)
 matrix = tf.constant(np.array([[1, 2], [3, 4]]), dtype=tf.float32)
 pprint([scalar, vector, matrix])
 ```  
-> output
 > ```Console
 > [<tf.Tensor: id=0, shape=(), dtype=int8, numpy=1>,
 >  <tf.Tensor: id=1, shape=(3,), dtype=float32, numpy=array([1., 2., 3.], dtype=float32)>,
@@ -41,7 +39,6 @@ Under the hood, `__repr__` is using the `shape` accessor to get the shape inform
 print(matrix.shape)
 pprint(tf.shape(matrix))
 ```    
-> output
 > ```Console
 > (2, 2)
 > <tf.Tensor: id=3, shape=(2,), dtype=int32, numpy=array([2, 2], dtype=int32)>
@@ -52,7 +49,6 @@ As for data type, we can't change a tensors' dtype with a mutator method as we c
 matrix = tf.cast(matrix, dtype=tf.int8)
 pprint(matrix)
 ```  
-> output
 > ```Console
 > <tf.Tensor: id=4, shape=(2, 2), dtype=int8, numpy=
 > array([[1, 2],
@@ -69,7 +65,6 @@ pprint(o)
 pprint(x)
 pprint(tf.ones_like(o))
 ```    
-> output
 > ```Console
 > <tf.Tensor: id=7, shape=(2, 2), dtype=float32, numpy=
 > array([[0., 0.],
@@ -88,7 +83,6 @@ We saw earlier that we can convert numpy arrays to Tensors with [`tf.constant`](
 x_numpy = x.numpy()
 print(type(x_numpy))
 ```
-> output
 > ```Console
 > <class 'numpy.ndarray'>
 > ```
@@ -102,7 +96,6 @@ with tf.device('/gpu:0'):
 print(x_cpu.device)
 print(x_gpu.device)
 ```
-> output
 > ```Console
 > /job:localhost/replica:0/task:0/device:CPU:0
 > /job:localhost/replica:0/task:0/device:GPU:0
@@ -119,7 +112,6 @@ Basic math operators in Python are overloaded by corresponding tensor operations
 e = tf.random.uniform((3, 2), dtype=x.dtype)
 pprint(tf.math.reduce_all(x.__add__(e) == tf.add(x, e)))
 ```
-> output
 > ```Console
 > <tf.Tensor: id=31, shape=(), dtype=bool, numpy=True>
 > ```  
@@ -128,7 +120,6 @@ pprint(tf.math.reduce_all(x.__add__(e) == tf.add(x, e)))
 ```python
 pprint(tf.math.reduce_all(x.__mul__(e) == tf.multiply(x, e)))
 ```
-> output
 > ```Console
 > <tf.Tensor: id=36, shape=(), dtype=bool, numpy=True>
 > ```
@@ -138,7 +129,6 @@ The [`tf.linalg`](https://www.tensorflow.org/api_docs/python/tf/linalg) module c
 ```python
 pprint(tf.math.reduce_all(x.__matmul__(tf.transpose(e)) == tf.linalg.matmul(x, e, transpose_b=True)))
 ```
-> output
 > ```Console
 > <tf.Tensor: id=43, shape=(), dtype=bool, numpy=True>
 > ```
@@ -151,7 +141,6 @@ pprint(matrix[0, 1])
 pprint(matrix[1, :2])
 pprint(matrix[tf.newaxis, 1, :2])
 ```
-> output
 > ```Console
 > <tf.Tensor: id=47, shape=(), dtype=int8, numpy=2>
 > <tf.Tensor: id=51, shape=(2,), dtype=int8, numpy=array([3, 4], dtype=int8)>
@@ -166,7 +155,6 @@ We can create variables with [`tf.Variable`](https://www.tensorflow.org/api_docs
 v = tf.Variable(x)
 pprint(v)
 ```
-> output
 > ```Console
 > <tf.Variable 'Variable:0' shape=(3, 2) dtype=float32, numpy=
 > array([[0.6645621 , 0.44100678],
@@ -178,7 +166,6 @@ Variables can be inputs to operations just as Tensors, note the output is a Tens
 ```python
 pprint(tf.square(v))
 ```
-> output
 > ```Console
 > <tf.Tensor: id=65, shape=(3, 2), dtype=float32, numpy=
 > array([[0.4416428 , 0.19448698],
@@ -191,7 +178,6 @@ Variables can be updated with `.assign`, `.assign_add` or `.assign_sub` methods.
 v.assign(tf.square(v))
 pprint(v)
 ```
-> output
 > ```Console
 > <tf.Variable 'Variable:0' shape=(3, 2) dtype=float32, numpy=
 > array([[0.4416428 , 0.19448698],
@@ -203,7 +189,6 @@ pprint(v)
 v.assign_sub(1 * tf.ones_like(v, dtype=v.dtype))
 pprint(v)
 ```
-> output
 > ```Console
 > <tf.Variable 'Variable:0' shape=(3, 2) dtype=float32, numpy=
 > array([[-0.55835724, -0.805513  ],
@@ -227,7 +212,6 @@ with tf.GradientTape(watch_accessed_variables=True) as tape:
 
 pprint(tape.gradient(target=c, sources=[a, b]))
 ```
-> output
 > ```Console
 > [<tf.Tensor: id=106, shape=(1,), dtype=float32, numpy=array([8.], dtype=float32)>,
 >  <tf.Tensor: id=113, shape=(1,), dtype=float32, numpy=array([3.], dtype=float32)>]
@@ -243,7 +227,6 @@ with tf.GradientTape() as tape:
 
 pprint(tape.gradient(target=c, sources=[d]))
 ```
-> output
 > ```Console
 > [<tf.Tensor: id=135, shape=(), dtype=float32, numpy=5.0>]
 > ```
@@ -256,7 +239,6 @@ with tf.GradientTape() as tape:
 pprint(tape.gradient(c, [a]))
 pprint(tape.gradient(c, [b]))
 ```
-> output
 > ```Console
 > [<tf.Tensor: id=153, shape=(1,), dtype=float32, numpy=array([8.], dtype=float32)>]
 > ---------------------------------------------------------------------------
@@ -279,7 +261,6 @@ pprint(tape.gradient(c, [b]))
 
 del tape
 ```
-> output
 > ```Console
 > [<tf.Tensor: id=175, shape=(1,), dtype=float32, numpy=array([8.], dtype=float32)>]
 > [<tf.Tensor: id=197, shape=(1,), dtype=float32, numpy=array([3.], dtype=float32)>]
@@ -311,7 +292,6 @@ for iteration in range(1001):
 
 pprint(weights)
 ```
-> output
 > ```Console
 > mean squared loss at iteration    0 is 15.1603
 > mean squared loss at iteration  100 is 0.2243

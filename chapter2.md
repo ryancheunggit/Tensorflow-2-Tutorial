@@ -18,7 +18,6 @@ true_weights = tf.constant(list(range(5)), dtype=tf.float32)[:, tf.newaxis]
 x = tf.constant(tf.random.uniform((32, 5)), dtype=tf.float32)
 y = tf.constant(x @ true_weights, dtype=tf.float32)
 ```
-> output
 > ```Console
 > 2.0.0
 > ```
@@ -34,7 +33,6 @@ def f(a, b, power=2, d=3):
 converted_f = tf.autograph.to_graph(f)
 print(inspect.getsource(converted_f))
 ```
-> output
 > ```Console
 >     def tf__f(a, b, power=None, d=None):
 >       do_return = False
@@ -59,7 +57,6 @@ def cube(x):
 converted_cube = tf.autograph.to_graph(cube)
 print(inspect.getsource(converted_cube))
 ```
-> output
 > ```Console
 > def tf__cube(x):
 >   do_return = False
@@ -95,7 +92,6 @@ def g(x):
 converted_g = tf.autograph.to_graph(g)
 print(inspect.getsource(converted_g))
 ```
-> output
 > ```Console
 >    def tf__g(x):
 >       do_return = False
@@ -139,7 +135,6 @@ print(tf_func_f.python_function is f)
 print(tf_func_g.python_function is converted_g)
 print(tf_func_g2.python_function is g)
 ```
-> output
 > ```Console
 > True
 > True
@@ -155,7 +150,6 @@ The next step is to provide Tensorflow a signature, i.e. a *description of input
 concrete_g = tf_func_g.get_concrete_function(x=tf.TensorSpec(shape=[3], dtype=tf.float32))
 print(concrete_g)
 ```
-> output
 > ``` Console
 > <tensorflow.python.eager.function.ConcreteFunction object at 0x7f7cf8736240>
 > ```  
@@ -165,7 +159,6 @@ We can use this concrete function directly as if it is a operation shipped with 
 pprint(concrete_g(tf.constant([-1, 1, -2], dtype=tf.float32)))
 pprint(tf_func_g(tf.constant([-1, 1, -2], dtype=tf.float32)))
 ```
-> output
 > ``` Console
 > <tf.Tensor: id=45, shape=(3,), dtype=float32, numpy=array([1., 1., 2.], dtype=float32)>
 > <tf.Tensor: id=74, shape=(3,), dtype=float32, numpy=array([1., 1., 2.], dtype=float32)>
@@ -181,7 +174,6 @@ pprint(tf_func_f(a=tf.constant(1., dtype=tf.float32), b=2, power=2.))
 pprint(tf_func_f(a=tf.constant(1., dtype=tf.float32), b=2., d=3))  
 pprint(tf_func_f(a=tf.constant(1., dtype=tf.float32), b=2., d=3., power=3.))
 ```
-> output
 > ```Console
 > <tensorflow.python.eager.function.ConcreteFunction object at 0x7fb8a40bf080>
 > <tf.Tensor: id=90, shape=(), dtype=float32, numpy=7.0>
@@ -203,7 +195,6 @@ print(tf_func_f._get_tracing_count())
 for i, f in enumerate(tf_func_f._list_all_concrete_functions_for_serialization()):
     print(i, f.structured_input_signature)
 ```
-> output
 ```Console
 > 0 ((TensorSpec(shape=(), dtype=tf.float32, name='a'), 2.0, 3.0, 3.0), {})
 > 1 ((TensorSpec(shape=(1,), dtype=tf.float32, name='a'), TensorSpec(shape=(1,), dtype=tf.float32, name='b'), 2, 3), {})
@@ -243,7 +234,6 @@ pprint(weights)
 
 print('time took: {} seconds'.format(time.time() - t0))
 ```
-> output
 > ```Console
 > mean squared loss at iteration    0 is 16.9626
 > mean squared loss at iteration  200 is 0.0363
@@ -283,7 +273,6 @@ for iteration in range(1001):
 pprint(weights)
 print('time took: {} seconds'.format(time.time() - t0))
 ```
-> output
 > ```Console
 > mean squared loss at iteration    0 is 18.7201
 > mean squared loss at iteration  200 is 0.0325
