@@ -13,9 +13,9 @@
     + [Linear Regression Revisited](chapter2.md#linear)
     + [Caveats](chapter2.md#caveats)
 3. [Models, Layers and Activations](chapter3.md)
-    + Models
-    + Layers
-    + Activations
-    + Fully Connected Networks
+    + [Models](chapter3.md#models)
+    + [Layers](chapter3.md#layers)
+    + [Activations](chapter3.md#activations)
+    + [Fully Connected Networks](chapter3.md#mlp)
 4. [Optimizers](chapter4.md)
 5. [Loss Functions](chapter5.md)

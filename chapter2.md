@@ -193,6 +193,13 @@ pprint(tf_func_f(a=tf.constant(1., dtype=tf.float32), b=2., d=3., power=3.))
 
 How many graphs we created during the block of code above? The answer is 4. Can you figure out which call created which graph?   
 ```python
+print(tf_func_f._get_tracing_count())
+```
+> ```Console
+> 4
+> ```
+
+```python
 for i, f in enumerate(tf_func_f._list_all_concrete_functions_for_serialization()):
     print(i, f.structured_input_signature)
 ```
