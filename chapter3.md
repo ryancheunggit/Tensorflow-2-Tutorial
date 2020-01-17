@@ -551,9 +551,38 @@ pprint(model.variables)
 There are also many [`activation`](https://www.tensorflow.org/api_docs/python/tf/keras/activations) functions we can choose from that ship with Tensorflow. We will do a survey on them later.
 
 ### 4. Fully Connected Networks {#mlp}
-With the code above, we just made a fully connected network, or historically called multi layer perceptron(with out any actual perceptron) as well as feed forward neural network. It is the simplest neural network model we can make with Tensorflow. To make it a Deep Learning model, all we need to do is to crank up `units` to be a list of many numbers.  
+With the code above, we just made a fully connected network, or historically called multi layer perceptron(with out any actual perceptron) as well as feed forward neural network. Its essentially a sequence of linear transformation with in-place non-linear activations sandwiched in between. We usually think of the initial layers as feature extractors that is performing some kind on implicit feature engineering and selection, and think of the last layer as a regressor or classifier per task.  
 
-Let's try to apply it to a real regression problems. The boston housing dataset shipped with Tensorflow. The dataset is splitted into two sets, a training set and a testing set. We will train the model on training set only, but record the loss on both sets to see if the reduction in training set loss is inline with reduction in the unseen testing set.  
+Note how we are using a list to host the layers and applying them sequentially in the call method. Lets quickly implement a quality of life improvement model class called `Sequential` to do this. It is pretty much a water down version of [`tf.keras.Sequential`](https://www.tensorflow.org/api_docs/python/tf/keras/Sequential). 
+```python
+class Sequential(tf.keras.Model):
+    def __init__(self, layers, **kwargs):
+        super().__init__(**kwargs)
+        self._layers = layers
+
+    @tf.function
+    def call(self, x):
+        for layer in self._layers:
+            x = layer(x)
+        return x
+
+
+class MLP(tf.keras.Model):
+    def __init__(self, num_hidden_units, num_targets, hidden_activation='relu', **kwargs):
+        super().__init__(**kwargs)
+        if type(num_hidden_units) is int: num_hidden_units = [num_hidden_units]
+        self.feature_extractor = Sequential([tf.keras.layers.Dense(unit, activation=hidden_activation)
+                                             for unit in num_hidden_units])
+        self.last_linear = tf.keras.layers.Dense(num_targets, activation='linear')
+
+    @tf.function
+    def call(self, x):
+        features = self.feature_extractor(x)
+        outputs = self.last_linear(features)
+        return outputs
+```
+
+Let's try to apply our MLP model to a real regression problems: the boston housing dataset shipped with Tensorflow. The dataset is splitted into two sets, a training set and a testing set. We will train the model on training set only, but record the loss on both sets to see if the reduction in training set loss is inline with reduction in the unseen testing set.  
 ```python
 (x_tr, y_tr), (x_te, y_te) = tf.keras.datasets.boston_housing.load_data()
 x_tr, y_tr, x_te, y_te = map(lambda x: tf.cast(x, tf.float32), (x_tr, y_tr, x_te, y_te))
@@ -584,7 +613,7 @@ def train(model, n_epochs=1000, his_freq=10):
             })
     return model, pd.DataFrame(history)
 
-mlp, mlp_history = train(NeuralNetwork([4, 1]))
+mlp, mlp_history = train(MLP(4, 1))
 pprint(mlp_history.tail())
 ax = mlp_history.plot(x='iteration', kind='line', logy=True)
 fig = ax.get_figure()
@@ -597,7 +626,7 @@ fig.savefig('ch3_plot_1.png')
 > 98        990      84.622231     83.712601
 > 99       1000      84.622269     83.712318
 > ```
-![traing history](/images/ch3_plot_1.png)  
+> ![traing history](/images/ch3_plot_1.png)  
 
 It seems our model has converged without too much a discrepancy between training set and testing set performance. The current optimization is the simplest gradient descent algorithm, we will look at other optimizers in the next chapter.  
 
