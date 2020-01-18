@@ -34,11 +34,9 @@ class MLP(tf.keras.Model):
 ### 1. Gradient Descent {#gd}
 Lets formally look at the gradient descent algorithm we have been using so far.  
 <div class='formula'>
-$$
-g \leftarrow \nabla_{\theta}J(\theta) \\
-u \leftarrow - \eta g \\
-\theta \leftarrow  \theta + u
-$$
+1. $$g \leftarrow \nabla_{\theta}J(\theta)$$ <br>
+2. $$u \leftarrow - \eta g$$ <br>
+3. $$\theta \leftarrow  \theta + u$$ 
 </div>  
 
 Where:
