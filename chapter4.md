@@ -33,11 +33,13 @@ class MLP(tf.keras.Model):
 
 ### 1. Gradient Descent {#gd}
 Lets formally look at the gradient descent algorithm we have been using so far.  
-<div class='formula'>$$
+<div class='formula'>
+$$
 g \leftarrow \nabla_{\theta}J(\theta) \\
 u \leftarrow - \eta g \\
 \theta \leftarrow  \theta + u
-$$</div>  
+$$
+</div>  
 
 Where:
 + $$g \leftarrow \nabla_{\theta}J(\theta)$$ is the gradient of loss function $$J$$ with respect to our model's parameters $$\theta$$.  
