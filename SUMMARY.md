@@ -18,4 +18,8 @@
     + [Activations](chapter3.md#activations)
     + [Fully Connected Networks](chapter3.md#mlp)
 4. [Optimizers](chapter4.md)
+    + [Gradient Descent](chapter4.md#gd)
+    + [Stochastic Gradient Descent](chapter4.md#sgd)
+    + [Momentum](chapter4.md#m)
+    + [Second Momentum](chapter4.md#mv)
 5. [Loss Functions](chapter5.md)
