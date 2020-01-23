@@ -1,4 +1,19 @@
 {
-    "plugins": ["katex"]
+    "plugins": ["katex"],
+    "pdf": {
+        "pageNumbers": true,
+        "fontSize": 12,
+        "paperSize": "letter",
+        "margin": {
+            "right": 4,
+            "left": 4,
+            "top": 4,
+            "bottom": 4
+        },
+        "headerTemplate": null,
+        "footerTemplate": null
+    },
+    "styles": {
+        "website": "styles/website.css"
+    }
 }
-                                        
