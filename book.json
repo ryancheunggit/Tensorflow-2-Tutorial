@@ -5,10 +5,10 @@
         "fontSize": 12,
         "paperSize": "letter",
         "margin": {
-            "right": 32,
-            "left": 32,
-            "top": 24,
-            "bottom": 24
+            "right": 48,
+            "left": 48,
+            "top": 36,
+            "bottom": 36
         },
         "headerTemplate": null,
         "footerTemplate": null
