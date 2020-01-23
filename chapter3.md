@@ -20,10 +20,9 @@ x = tf.constant(tf.random.uniform((32, 5)), dtype=tf.float32)
 y = tf.constant(x @ true_weights, dtype=tf.float32)
 ```
 > ```Console
-> 2.0.0
-> ```
-</div>
-</details>  
+> 2.1.0
+> ```  
+
 
 ### 1. Models {#models}
 A model is a set of parameters and the computation methods using these parameters. Since these two elements are tied together, we could organize them better by encapsulating the two into a class.
@@ -553,7 +552,7 @@ There are also many [`activation`](https://www.tensorflow.org/api_docs/python/tf
 ### 4. Fully Connected Networks {#mlp}
 With the code above, we just made a fully connected network, or historically called multi layer perceptron(with out any actual perceptron) as well as feed forward neural network. Its essentially a sequence of linear transformation with in-place non-linear activations sandwiched in between. We usually think of the initial layers as feature extractors that is performing some kind on implicit feature engineering and selection, and think of the last layer as a regressor or classifier per task.  
 
-Note how we are using a list to host the layers and applying them sequentially in the call method. Lets quickly implement a quality of life improvement model class called `Sequential` to do this. It is pretty much a water down version of [`tf.keras.Sequential`](https://www.tensorflow.org/api_docs/python/tf/keras/Sequential). 
+Note how we are using a list to host the layers and applying them sequentially in the call method. Lets quickly implement a quality of life improvement model class called `Sequential` to do this. It is pretty much a water down version of [`tf.keras.Sequential`](https://www.tensorflow.org/api_docs/python/tf/keras/Sequential).
 ```python
 class Sequential(tf.keras.Model):
     def __init__(self, layers, **kwargs):
@@ -582,9 +581,10 @@ class MLP(tf.keras.Model):
         return outputs
 ```
 
-Let's try to apply our MLP model to a real regression problems: the boston housing dataset shipped with Tensorflow. The dataset is splitted into two sets, a training set and a testing set. We will train the model on training set only, but record the loss on both sets to see if the reduction in training set loss is inline with reduction in the unseen testing set.  
+Let's try to apply our MLP model to a real regression problems: the boston housing dataset shipped with Tensorflow. The dataset is splitted into two sets, a training set and a testing set. We will train the model on training set only, but record the loss on both sets to see if the reduction in training set loss is inline with reduction in the unseen testing set.   
 ```python
 (x_tr, y_tr), (x_te, y_te) = tf.keras.datasets.boston_housing.load_data()
+y_tr, y_te = map(lambda x: np.expand_dims(x, -1), (y_tr, y_te))
 x_tr, y_tr, x_te, y_te = map(lambda x: tf.cast(x, tf.float32), (x_tr, y_tr, x_te, y_te))
 
 @tf.function
@@ -628,6 +628,13 @@ fig.savefig('ch3_plot_1.png')
 > ```
 > ![traing history](/images/ch3_plot_1.png)  
 
-It seems our model has converged without too much a discrepancy between training set and testing set performance. The current optimization is the simplest gradient descent algorithm, we will look at other optimizers in the next chapter.  
+It may seem that our model has nicely converged. Since there is not much a discrepancy between training set and testing set performance. However if we look at the numbers more closely, they are pretty bad. A simple constant prediction have MSE around 83. What could go wrong? We will look at other optimizers in the next chapter.  
+```python
+print(tf.reduce_mean(tf.square(y_te - tf.reduce_mean(y_te))))
+```
+> ```Console
+> tf.Tensor(83.24384, shape=(), dtype=float32)
+> ```  
+
 
 ### [Appendix. Code for this Chapter](https://gist.github.com/ryancheunggit/ab666d2f7b1156b03a6a4ff3374f2ec0)

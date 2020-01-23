@@ -12,8 +12,8 @@ print(tf.__version__)
 tf.random.set_seed(42)
 ```
 > ```Console
-> 2.0.0
-> ```
+> 2.1.0
+> ```  
 
 ### 1. Tensors {#tensors}
 Tensors are the objects that flow through operations(i.e., they are the inputs and the same time outputs of operations). They are N-dimensional arrays that hold elements of the same data type. The tensor objects in Tensorflow all have the shape and dtype properties, where shape is the number of elements that the tensor houses in each dimension, and dtype is the data type that all the elements within the tensor belong to.  
@@ -26,9 +26,9 @@ matrix = tf.constant(np.array([[1, 2], [3, 4]]), dtype=tf.float32)
 pprint([scalar, vector, matrix])
 ```  
 > ```Console
-> [<tf.Tensor: id=0, shape=(), dtype=int8, numpy=1>,
->  <tf.Tensor: id=1, shape=(3,), dtype=float32, numpy=array([1., 2., 3.], dtype=float32)>,
->  <tf.Tensor: id=2, shape=(2, 2), dtype=float32, numpy=
+> [<tf.Tensor: shape=(), dtype=int8, numpy=1>,
+>  <tf.Tensor: shape=(3,), dtype=float32, numpy=array([1., 2., 3.], dtype=float32)>,
+>  <tf.Tensor: shape=(2, 2), dtype=float32, numpy=
 > array([[1., 2.],
 >        [3., 4.]], dtype=float32)>]
 > ```  
@@ -38,10 +38,12 @@ Under the hood, `__repr__` is using the `shape` accessor to get the shape inform
 ```python
 print(matrix.shape)
 pprint(tf.shape(matrix))
+print(id(matrix))
 ```    
 > ```Console
 > (2, 2)
-> <tf.Tensor: id=3, shape=(2,), dtype=int32, numpy=array([2, 2], dtype=int32)>
+> <tf.Tensor: shape=(2,), dtype=int32, numpy=array([2, 2], dtype=int32)>
+> 139880719227424
 > ```  
 
 As for data type, we can't change a tensors' dtype with a mutator method as we can with numpy ndarrys(like `a = np.array([1, 2, 3]); a.dtype = np.float32)`). We can only use the [`tf.cast`](https://www.tensorflow.org/api_docs/python/tf/dtypes/cast) operation to create a new tensor with the desired new data type.
@@ -50,9 +52,10 @@ matrix = tf.cast(matrix, dtype=tf.int8)
 pprint(matrix)
 ```  
 > ```Console
-> <tf.Tensor: id=4, shape=(2, 2), dtype=int8, numpy=
+> <tf.Tensor: shape=(2, 2), dtype=int8, numpy=
 > array([[1, 2],
 >        [3, 4]], dtype=int8)>
+> 139880719226416
 > ```
 
 Notice the new tensor has the same values as the original tensor, but with int8 data type and it also has a different id number 4, indicating that it is a new tensor object.  
@@ -66,14 +69,14 @@ pprint(x)
 pprint(tf.ones_like(o))
 ```    
 > ```Console
-> <tf.Tensor: id=7, shape=(2, 2), dtype=float32, numpy=
+> <tf.Tensor: shape=(2, 2), dtype=float32, numpy=
 > array([[0., 0.],
 >        [0., 0.]], dtype=float32)>
-> <tf.Tensor: id=15, shape=(3, 2), dtype=float32, numpy=
+> <tf.Tensor: shape=(3, 2), dtype=float32, numpy=
 > array([[0.6645621 , 0.44100678],
 >        [0.3528825 , 0.46448255],
 >        [0.03366041, 0.68467236]], dtype=float32)>
-> <tf.Tensor: id=18, shape=(2, 2), dtype=float32, numpy=
+> <tf.Tensor: shape=(2, 2), dtype=float32, numpy=
 > array([[1., 1.],
 >        [1., 1.]], dtype=float32)>
 > ```
@@ -113,7 +116,7 @@ e = tf.random.uniform((3, 2), dtype=x.dtype)
 pprint(tf.math.reduce_all(x.__add__(e) == tf.add(x, e)))
 ```
 > ```Console
-> <tf.Tensor: id=31, shape=(), dtype=bool, numpy=True>
+> <tf.Tensor: shape=(), dtype=bool, numpy=True>
 > ```  
 
 + Element-wise multiplication
@@ -121,7 +124,7 @@ pprint(tf.math.reduce_all(x.__add__(e) == tf.add(x, e)))
 pprint(tf.math.reduce_all(x.__mul__(e) == tf.multiply(x, e)))
 ```
 > ```Console
-> <tf.Tensor: id=36, shape=(), dtype=bool, numpy=True>
+> <tf.Tensor: shape=(), dtype=bool, numpy=True>
 > ```
 
 The [`tf.linalg`](https://www.tensorflow.org/api_docs/python/tf/linalg) module contains linear algebra operations. For example:   
@@ -130,7 +133,7 @@ The [`tf.linalg`](https://www.tensorflow.org/api_docs/python/tf/linalg) module c
 pprint(tf.math.reduce_all(x.__matmul__(tf.transpose(e)) == tf.linalg.matmul(x, e, transpose_b=True)))
 ```
 > ```Console
-> <tf.Tensor: id=43, shape=(), dtype=bool, numpy=True>
+> <tf.Tensor: shape=(), dtype=bool, numpy=True>
 > ```
 
 *TODO: work on a list of commonly used Tensorflow operations with example usecases.*
@@ -142,9 +145,9 @@ pprint(matrix[1, :2])
 pprint(matrix[tf.newaxis, 1, :2])
 ```
 > ```Console
-> <tf.Tensor: id=47, shape=(), dtype=int8, numpy=2>
-> <tf.Tensor: id=51, shape=(2,), dtype=int8, numpy=array([3, 4], dtype=int8)>
-> <tf.Tensor: id=55, shape=(1, 2), dtype=int8, numpy=array([[3, 4]], dtype=int8)>
+> <tf.Tensor: shape=(), dtype=int8, numpy=2>
+> <tf.Tensor: shape=(2,), dtype=int8, numpy=array([3, 4], dtype=int8)>
+> <tf.Tensor: shape=(1, 2), dtype=int8, numpy=array([[3, 4]], dtype=int8)>
 > ```
 
 ### 3. Variables {#variables}
@@ -213,8 +216,8 @@ with tf.GradientTape(watch_accessed_variables=True) as tape:
 pprint(tape.gradient(target=c, sources=[a, b]))
 ```
 > ```Console
-> [<tf.Tensor: id=106, shape=(1,), dtype=float32, numpy=array([8.], dtype=float32)>,
->  <tf.Tensor: id=113, shape=(1,), dtype=float32, numpy=array([3.], dtype=float32)>]
+> [<tf.Tensor: shape=(1,), dtype=float32, numpy=array([8.], dtype=float32)>,
+>  <tf.Tensor: shape=(1,), dtype=float32, numpy=array([3.], dtype=float32)>]
 > ```
 
 By default, the context will only keep track of the variables but not the tensors, meaning that we can only ask for gradients with respect to the variables by default (through the `watch_accessed_variables` argument which defaults to `True`). But we can explicitly ask the tape to watch things for us.
@@ -228,7 +231,7 @@ with tf.GradientTape() as tape:
 pprint(tape.gradient(target=c, sources=[d]))
 ```
 > ```Console
-> [<tf.Tensor: id=135, shape=(), dtype=float32, numpy=5.0>]
+> [<tf.Tensor: shape=(), dtype=float32, numpy=5.0>]
 > ```
 
 Note that once we extracted the gradients from the tape, the resources it holds will be released.
@@ -262,8 +265,8 @@ pprint(tape.gradient(c, [b]))
 del tape
 ```
 > ```Console
-> [<tf.Tensor: id=175, shape=(1,), dtype=float32, numpy=array([8.], dtype=float32)>]
-> [<tf.Tensor: id=197, shape=(1,), dtype=float32, numpy=array([3.], dtype=float32)>]
+> [<tf.Tensor: shape=(1,), dtype=float32, numpy=array([8.], dtype=float32)>]
+> [<tf.Tensor: shape=(1,), dtype=float32, numpy=array([3.], dtype=float32)>]
 > ```
 
 ### 5. Linear Regression {#linear}

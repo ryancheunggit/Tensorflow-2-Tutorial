@@ -19,8 +19,8 @@ x = tf.constant(tf.random.uniform((32, 5)), dtype=tf.float32)
 y = tf.constant(x @ true_weights, dtype=tf.float32)
 ```
 > ```Console
-> 2.0.0
-> ```
+> 2.1.0
+> ```  
 
 ### 1. AutoGraph {#autograph}
 A computational graph contains two things computation and data. Tensorflow graph [`tf.Graph`](https://www.tensorflow.org/api_docs/python/tf/Graph) is the computational graph made from operations as computation units and tensors as data units. Tensorflow has many optimizations around graphs, so executing in graph mode result in better utilization of distributed computing. Instead of writing complicated graph mode code, Tensorflow 2 provides a tool *AutoGraph* to automatically analyze and convert python code into graph code which can then be traced to create a graph with *Function*.   
@@ -34,17 +34,17 @@ converted_f = tf.autograph.to_graph(f)
 print(inspect.getsource(converted_f))
 ```
 > ```Console
->     def tf__f(a, b, power=None, d=None):
->       do_return = False
->       retval_ = ag__.UndefinedReturnValue()
->       with ag__.FunctionScope('f', 'f_scope', ag__.ConversionOptions(recursive=True, user_requested=True, optional_features=(), internal_convert_user_code=True)) as f_scope:
->         do_return = True
->         retval_ = f_scope.mark_return_value(ag__.converted_call(tf.pow, f_scope.callopts, (a, power), None, f_scope) + d * b)
->       do_return,
->       return ag__.retval(retval_)
+> def tf__f(a, b, power=None, d=None):
+>   do_return = False
+>   retval_ = ag__.UndefinedReturnValue()
+>   with ag__.FunctionScope('f', 'fscope', ag__.ConversionOptions(recursive=True, user_requested=True, optional_features=(), internal_convert_user_code=True)) as fscope:
+>     do_return = True
+>     retval_ = fscope.mark_return_value(ag__.converted_call(tf.pow, (a, power), None, fscope) + d * b)
+>   do_return,
+>   return ag__.retval(retval_)
 > ```
 
-The generated function is a regular python function. Even though it may look much more complicated than the original function, but most stuff is boilerplate code to handling details of function scopes and overloads function calls with [`converted_call`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/autograph/impl/api.py#L377). The line `retval_ = f_scope.mark_return_value(ag__.converted_call(tf.pow, f_scope.callopts, (a, power), None, f_scope) + d * b)` tells us that the generated code is performing the same computation.
+The generated function is a regular python function. Even though it may look much more complicated than the original function, but most stuff is boilerplate code to handling details of function scopes and overloads function calls with [`converted_call`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/autograph/impl/api.py#L377). The line `retval_ = fscope.mark_return_value(ag__.converted_call(tf.pow, (a, power), None, fscope) + d * b)` tells us that the generated code is performing the same computation.
 
 Let's move on to another python function with a bit graph unfriendly construct.
 ```python
@@ -61,7 +61,7 @@ print(inspect.getsource(converted_cube))
 > def tf__cube(x):
 >   do_return = False
 >   retval_ = ag__.UndefinedReturnValue()
->   with ag__.FunctionScope('cube', 'cube_scope', ag__.ConversionOptions(recursive=True, user_requested=True, optional_features=(), internal_convert_user_code=True)) as cube_scope:
+>   with ag__.FunctionScope('cube', 'fscope', ag__.ConversionOptions(recursive=True, user_requested=True, optional_features=(), internal_convert_user_code=True)) as fscope:
 >     o = x
 >
 >     def get_state():
@@ -74,9 +74,9 @@ print(inspect.getsource(converted_cube))
 >       _ = iterates
 >       o *= x
 >       return o,
->     o, = ag__.for_stmt(ag__.converted_call(range, cube_scope.callopts, (2,), None, cube_scope), None, loop_body, get_state, set_state, (o,), ('o',), ())
+>     o, = ag__.for_stmt(ag__.converted_call(range, (2,), None, fscope), None, loop_body, get_state, set_state, (o,), ('o',), ())
 >     do_return = True
->     retval_ = cube_scope.mark_return_value(o)
+>     retval_ = fscope.mark_return_value(o)
 >   do_return,
 >   return ag__.retval(retval_)
 > ```
@@ -93,30 +93,31 @@ converted_g = tf.autograph.to_graph(g)
 print(inspect.getsource(converted_g))
 ```
 > ```Console
->    def tf__g(x):
->       do_return = False
->       retval_ = ag__.UndefinedReturnValue()
->       with ag__.FunctionScope('g', 'fscope', ag__.ConversionOptions(recursive=True, user_requested=True, optional_features=(), internal_convert_user_code=True)) as fscope:
+> def tf__g(x):
+>   do_return = False
+>   retval_ = ag__.UndefinedReturnValue()
+>   with ag__.FunctionScope('g', 'fscope', ag__.ConversionOptions(recursive=True, user_requested=True, optional_features=(), internal_convert_user_code=True)) as fscope:
 >
->         def get_state():
->           return ()
+>     def get_state():
+>       return ()
 >
->         def set_state(_):
->           pass
+>     def set_state(_):
+>       pass
 >
->         def if_true():
->           do_return = True
->           retval_ = fscope.mark_return_value(ag__.converted_call(tf.square, (x,), None, fscope))
->           return retval_, do_return
+>     def if_true():
+>       do_return = True
+>       retval_ = fscope.mark_return_value(ag__.converted_call(tf.square, (x,), None, fscope))
+>       return do_return, retval_
 >
->         def if_false():
->           do_return = True
->           retval_ = fscope.mark_return_value(x)
->           return retval_, do_return
->         cond = ag__.converted_call(tf.reduce_any, (x < 0,), None, fscope)
->         retval_, do_return = ag__.if_stmt(cond, if_true, if_false, get_state, set_state, ('retval_', 'do_return'), ())
->       do_return,
->       return ag__.retval(retval_)
+>     def if_false():
+>       do_return = True
+>       retval_ = fscope.mark_return_value(x)
+>       return do_return, retval_
+>     cond = ag__.converted_call(tf.reduce_any, (x < 0,), None, fscope)
+>     do_return, retval_ = ag__.if_stmt(cond, if_true, if_false, get_state, set_state, ('do_return', 'retval_'), ())
+>   do_return,
+>   return ag__.retval(retval_)
+>
 > ```
 
 Here we see the similar thing happened with the conditional execution, it also has been converted into a functional form by *overload* the `if` statement.  
@@ -160,9 +161,9 @@ pprint(concrete_g(tf.constant([-1, 1, -2], dtype=tf.float32)))
 pprint(tf_func_g(tf.constant([-1, 1, -2], dtype=tf.float32)))
 ```
 > ``` Console
-> <tf.Tensor: id=45, shape=(3,), dtype=float32, numpy=array([1., 1., 2.], dtype=float32)>
-> <tf.Tensor: id=74, shape=(3,), dtype=float32, numpy=array([1., 1., 2.], dtype=float32)>
-> ```    
+> <tf.Tensor: shape=(3,), dtype=float32, numpy=array([1., 1., 4.], dtype=float32)>
+> <tf.Tensor: shape=(3,), dtype=float32, numpy=array([1., 1., 4.], dtype=float32)>
+> ```   
 
 The Function object is like a graph factory. When detailed input specifications were provided, it uses the graph code as receipt to create new graphs. When asked with an known specifications, it will dig up the graph in the storage and serve it. When called with an unknown signature, it will trigger the creation of the concrete function first. Let's try to make a bunch graphs.
 ```python
@@ -176,11 +177,11 @@ pprint(tf_func_f(a=tf.constant(1., dtype=tf.float32), b=2., d=3., power=3.))
 ```
 > ```Console
 > <tensorflow.python.eager.function.ConcreteFunction object at 0x7fb8a40bf080>
-> <tf.Tensor: id=90, shape=(), dtype=float32, numpy=7.0>
-> <tf.Tensor: id=99, shape=(), dtype=float32, numpy=7.0>
-> <tf.Tensor: id=109, shape=(), dtype=float32, numpy=7.0>
-> <tf.Tensor: id=111, shape=(), dtype=float32, numpy=7.0>
-> <tf.Tensor: id=121, shape=(), dtype=float32, numpy=7.0>
+> <tf.Tensor: shape=(), dtype=float32, numpy=7.0>
+> <tf.Tensor: shape=(), dtype=float32, numpy=7.0>
+> <tf.Tensor: shape=(), dtype=float32, numpy=7.0>
+> <tf.Tensor: shape=(), dtype=float32, numpy=7.0>
+> <tf.Tensor: shape=(), dtype=float32, numpy=7.0>
 > ```
 
 How many graphs we created during the block of code above? The answer is 4. Can you figure out which call created which graph?   
@@ -219,6 +220,9 @@ square = tf.function(autograph=False)(square)
 Now let's go back to our linear regression example from last time and try to sugar it up with `tf.function`. Let's run the baseline.
 ```python
 t0 = time.time()
+
+weights = tf.Variable(tf.random.uniform((5, 1)), dtype=tf.float32)
+
 for iteration in range(1001):
     with tf.GradientTape() as tape:
         y_hat = tf.linalg.matmul(x, weights)
