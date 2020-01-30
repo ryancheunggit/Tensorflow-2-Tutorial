@@ -183,7 +183,7 @@ print(history['testing_loss'].min())
 ```
 > ![gradient descent with grad clip](/images/ch4_plot_2.png)    
 
-Now, we trid training our model again, this time, we normalize the gradients to have l2 norm equal to a small number 2, and indeed we got much better result even with the previously problematic learning rate value 1e-3.  
+Now, we tried training our model again, this time, we normalize the gradients to have l2 norm equal to a small number 2, and indeed we got much better result even with the previously problematic learning rate value 1e-3.  
 
 ### 2. Stochastic Gradient Descent {#sgd}
 Yet another problem with the above gradient descent optimization is that it uses the full dataset every time it needs to do a parameter update. It can be very both very slow and memory hungry. A quick fix is to use small samples of the data to get estimates of the gradients and perform much more frequent updates. This is called stochastic gradient descent(SGD).
@@ -255,28 +255,6 @@ print(history.testing_loss_full.min())
 > ![stochastic gradient descent training loss](/images/ch4_plot_3.png)    
 
 We can see that training with small batches of random samples, the trajectory of loss values becomes a bit zig-zag in shape, but still follows the similar path as previously when we train with full dataset.
-
-```python
-model, history = train(MLP(4, 1), GradientDescent(1e-3))
-print(model.layers[0](x_te))
-print(model.layers[0](x_te) @ model.layers[1].variables[0])
-print(model.layers[1].variables[1])
-```
-> ```Console
-> tf.Tensor(
-> [[0. 0. 0. 0.]
->  [0. 0. 0. 0.]
->  ...
->  [0. 0. 0. 0.]
->  [0. 0. 0. 0.]], shape=(102, 4), dtype=float32)
-> tf.Tensor(
-> [[0.]
->  [0.]
->  ...
->  [0.]
->  [0.]], shape=(102, 1), dtype=float32)
-> <tf.Variable 'dense_15/bias:0' shape=(1,) dtype=float32, numpy=array([22.394573], dtype=float32)>
-> ```
 
 ### 3 Momentum {#m}
 If we look at the learning curve, we see that after the initial huge drop, the progress becomes very slow but steady. Wondering if there is something can help us accelerate the progress? One improvement made to Gradient Descent is to accelerate it by builds up the velocity, which equals to use an exponential moving average(EMA) version of the gradients. In formula it looks like:      
