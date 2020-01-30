@@ -160,27 +160,26 @@ print(model.layers[1].variables[1])
 > <tf.Variable 'dense_15/bias:0' shape=(1,) dtype=float32, numpy=array([22.394573], dtype=float32)>
 > ```
 
-Indeed, with learning rate 1e-3 our network basically collapsed to a bias term. In this case, the initial gradients are too big, if the learning rate is also very big, it can kill almost all the units immediately. So, we would need to either reduce the learning rate or apply some kind of control of the gradient values. Normalize the gradient is a good addition we should add to the gradient descent optimizer.   
+Indeed, with learning rate 1e-3 our network basically collapsed to a bias term. In this case, the initial gradients exploded, if the learning rate is also very big, it can kill almost all the units immediately. So, we would need to either reduce the learning rate or apply some kind of control of the gradient values. Normalize the gradient is a good addition we should add to the gradient descent optimizer.   
 ```python
 class GradientDescent(object):
-    def __init__(self, lr=.01, grad_norm=None):
+    def __init__(self, lr=.01, clipnorm=None):
         self._lr = tf.Variable(lr, dtype=tf.float32)
-        self.grad_norm = grad_norm
+        self.clipnorm = clipnorm
 
     def apply_gradients(self, grads_and_vars):
         for grad, var in grads_and_vars:
-            if self.grad_norm > 0:
-                grad = tf.clip_by_norm(grad, self.grad_norm)
+            if self.clipnorm: grad = tf.clip_by_norm(grad, self.clipnorm)
             update = - self._lr * grad
             var.assign_add(update)
 
-model, history = train(MLP(4, 1), GradientDescent(1e-3, grad_norm=2))
+model, history = train(MLP(4, 1), GradientDescent(1e-3, clipnorm=2))
 ax = history.plot(x='epoch', logy=True, figsize=(12, 6))
 ax.get_figure().savefig('ch4_plot_2.png')
 print(history['testing_loss'].min())
 ```
 ```Console
-36.491302490234375
+49.352027893066406
 ```
 > ![gradient descent with grad clip](/images/ch4_plot_2.png)    
 
@@ -251,8 +250,223 @@ ax.get_figure().savefig('ch4_plot_3.png')
 print(history.testing_loss_full.min())
 ```
 > ```Console
-> 31.820463180541992
+> 30.624069213867188
 > ```
 > ![stochastic gradient descent training loss](/images/ch4_plot_3.png)    
 
 We can see that training with small batches of random samples, the trajectory of loss values becomes a bit zig-zag in shape, but still follows the similar path as previously when we train with full dataset.
+
+```python
+model, history = train(MLP(4, 1), GradientDescent(1e-3))
+print(model.layers[0](x_te))
+print(model.layers[0](x_te) @ model.layers[1].variables[0])
+print(model.layers[1].variables[1])
+```
+> ```Console
+> tf.Tensor(
+> [[0. 0. 0. 0.]
+>  [0. 0. 0. 0.]
+>  ...
+>  [0. 0. 0. 0.]
+>  [0. 0. 0. 0.]], shape=(102, 4), dtype=float32)
+> tf.Tensor(
+> [[0.]
+>  [0.]
+>  ...
+>  [0.]
+>  [0.]], shape=(102, 1), dtype=float32)
+> <tf.Variable 'dense_15/bias:0' shape=(1,) dtype=float32, numpy=array([22.394573], dtype=float32)>
+> ```
+
+### 3 Momentum {#m}
+If we look at the learning curve, we see that after the initial huge drop, the progress becomes very slow but steady. Wondering if there is something can help us accelerate the progress? One improvement made to Gradient Descent is to accelerate it by builds up the velocity, which equals to use an exponential moving average(EMA) version of the gradients. In formula it looks like:      
+<div class='formula'>
+1. $$g \leftarrow \nabla_{\theta}J(\theta)$$ <br>
+2. $$u \leftarrow \beta u - \eta g$$ <br>
+3. $$\theta \leftarrow  \theta + u$$
+</div>  
+
+The It is not too difficult to upgrade our gradient descent optimizer to add this feature.   
+
+```python  
+class Momentum(object):
+    def __init__(self, lr=.01, beta=.9, clipnorm=None):
+        self._lr = tf.Variable(lr, dtype=tf.float32)
+        self._beta = tf.Variable(beta, dtype=tf.float32)
+        self.clipnorm = clipnorm
+
+    def init_moments(self, var_list):
+        self._moments = {var._unique_id: tf.Variable(tf.zeros_like(var))
+                         for var in var_list}
+
+    def apply_gradients(self, grads_and_vars):
+        for grad, var in grads_and_vars:
+            if self.clipnorm: grad = tf.clip_by_norm(grad, self.clipnorm)   
+            m = self._moments[var._unique_id]
+            m.assign(self._beta * m - self._lr * grad)
+            update = m
+            var.assign_add(m)
+```  
+
+What did here is to add a set of moment variables to accumulates gradients. We used a mapping to keep track of the association between variables and the accumulators.  
+
+```python
+model = MLP(4, 1)
+model.build(input_shape=(32,13))
+optimizer = Momentum(lr=1e-3, beta=.98, clipnorm=2)
+optimizer.init_moments(model.variables)
+
+model, history = train(model, optimizer, n_epochs=1000)
+ax = history.plot(x='epoch', kind='line', figsize=(12, 6))
+ax.get_figure().savefig('ch4_plot_4.png')
+
+print(history.testing_loss_full.min())
+```    
+> ```Console
+> 29.115631103515625
+> ```
+> ![stochastic gradient descent momentum training loss](/images/ch4_plot_4.png)    
+
+### 4. Second Momentum {#mv}
+As with the first moment of the gradients, second moment were also made use to guide optimization.
+The Adam optimizer looks like this in formula
+<div class='formula'>
+1. $$g \leftarrow \nabla_{\theta}J(\theta)$$ <br>
+2. $$m \leftarrow \beta_1 m + (1 - \beta_1) g$$ <br>
+3. $$v \leftarrow \beta_2 v + (1 - \beta_2) g^2$$ <br>
+4. $$\hat{\eta} \leftarrow \eta \frac{\sqrt{1 - \beta_2^T}}{1-\beta_1^T}$$ <br>
+5. $$u \leftarrow - \hat{\eta} \frac{m}{\sqrt{v} + \epsilon}$$ <br>
+6. $$\theta \leftarrow \theta + u$$
+</div>  
+
+In a nutshell, the optimizer uses two sets of accumulators to keep track of the first two moments of the gradients. The algorithm uses the second moment to scale the first moment, intuitively this works like a signal to noise ratio adjustment, with the first moment be the signal and the second moment be noise. Since all the operations are elementwise, this signal to noise treatment is customized for each and every parameter in the model, so effectively every parameter has its own learning rate.  
+
+With a few copy, paste and edit, we can upgrade the gradient descent with momentum optimizer to Adam easily.
+
+```python  
+class Adam(object):
+    def __init__(self, lr=.01, beta_1=.9, beta_2=.999, epsilon=1e-8, clipnorm=None):
+        self._lr = tf.Variable(lr, dtype=tf.float32)
+        self._beta_1 = tf.Variable(beta_1, dtype=tf.float32)
+        self._beta_2 = tf.Variable(beta_2, dtype=tf.float32)
+        self._epsilon = tf.constant(epsilon, dtype=tf.float32)
+        self.clipnorm = clipnorm
+        self._t = tf.Variable(0, dtype=tf.float32)
+
+    def init_moments(self, var_list):
+        self._m = {var._unique_id: tf.Variable(tf.zeros_like(var))
+                   for var in var_list}
+        self._v = {var._unique_id: tf.Variable(tf.zeros_like(var))
+                   for var in var_list}
+
+    def apply_gradients(self, grads_and_vars):
+        self._t.assign_add(tf.constant(1., self._t.dtype))
+        for grad, var in grads_and_vars:
+            if self.clipnorm: grad = tf.clip_by_norm(grad, self.clipnorm)
+
+            m = self._m[var._unique_id]
+            v = self._v[var._unique_id]
+
+            m.assign(self._beta_1 * m + (1. - self._beta_1) * grad)
+            v.assign(self._beta_2 * v + (1. - self._beta_2) * tf.square(grad))
+
+            lr = self._lr * tf.sqrt(1 - tf.pow(self._beta_2, self._t)) / (1 - tf.pow(self._beta_1, self._t))
+            update = -lr * m / (tf.sqrt(v) + self._epsilon)
+            var.assign_add(update)
+```  
+
+Let's see if we can get better result with Adam.  
+```python
+model = MLP(4, 1)
+model.build(input_shape=(32,13))
+optimizer = Adam(lr=1e-3, beta_1=.9, beta_2=.999, epsilon=1e-8, clipnorm=2)
+optimizer.init_moments(model.variables)
+
+model, history = train(model, optimizer, n_epochs=1000)
+ax = history.plot(x='epoch', kind='line', figsize=(12, 6))
+ax.get_figure().savefig('ch4_plot_5.png')
+
+print(history.testing_loss_full.min())
+```
+> ```Console
+> 28.03963851928711
+> ```
+> ![Adam training loss](/images/ch4_plot_5.png)    
+
+Adam is pretty much the default first choice of optimizer for most people on most problems. Since we have already organically coded it up, we can now take a look at how we can go about to do it by sub classing the [`tf.keras.optimizers.Optimizer`](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Optimizer).   
+
+To implement a custom `tf.keras` optimizer, there are a few methods we need to implement:  
+1. `_resource_apply_dense()` - this is the method used to perform parameter updates with dense gradient tensors.   
+2. `_resource_apply_sparse()` - above but works with sparse gradient tensors.   
+3. `_create_slots()` - optionally if the optimizer require more variables. If the optimizer only uses gradients and variables(like SGD), this is not needed.   
+4.` _get_config()` - optionally for save(serialize) / load(de-serialize) the optimizer with hyperparameters.   
+
+our `init_moments()` method roughly corresponds to the `_create_slots()` and our `apply_gradients()` method needs to be moved to `_resource_apply_dense()`. And since we have quite a few hyperparameters, we need to code up the `_get_config()` method too.   
+
+```python
+class Adam(tf.keras.optimizers.Optimizer):
+    def __init__(self, learning_rate=.001, beta_1=.9, beta_2=.999, epsilon=1e-8, name='Adam', **kwargs):
+        super().__init__(name, **kwargs)
+        self._set_hyper('learning_rate', kwargs.get('lr', learning_rate))
+        self._set_hyper('beta_1', beta_1)
+        self._set_hyper('beta_2', beta_2)
+        self.epsilon = epsilon or tf.keras.backend.epsilon()
+
+    def _create_slots(self, var_list):
+        for var in var_list:
+            self.add_slot(var, 'm')
+        for var in var_list:
+            self.add_slot(var, 'v')    
+
+    def _resource_apply_dense(self, grad, var):
+        dtype = var.dtype.base_dtype
+        t = tf.cast(self.iterations + 1, dtype)
+        lr = self._decayed_lr(dtype)
+        beta_1 = self._get_hyper('beta_1', dtype)
+        beta_2 = self._get_hyper('beta_2', dtype)
+        epsilon = tf.convert_to_tensor(self.epsilon, dtype)
+
+        m = self.get_slot(var, 'm')
+        v = self.get_slot(var, 'v')
+
+        m = m.assign(beta_1 * m + (1. - beta_1) * grad)
+        v = v.assign(beta_2 * v + (1. - beta_2) * tf.square(grad))
+
+        lr = lr * tf.sqrt(1 - tf.pow(beta_2, t)) / (1 - tf.pow(beta_1, t))
+        update = -lr * m / (tf.sqrt(v) + epsilon)
+        var_update = var.assign_add(update)
+        updates = [var_update, m, v]
+        return tf.group(*updates)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'learning_rate': self._serialize_hyperparameter('learning_rate'),
+            'beta_1': self._serialize_hyperparameter('beta_1'),
+            'beta_2': self._serialize_hyperparameter('beta_2'),
+            'epsilon': self.epsilon,
+            'total_steps': self._serialize_hyperparameter('total_steps'),
+        })
+        return config
+```
+
+Time to see how does it compares.  
+```python
+model = MLP(4, 1)
+optimizer = Adam(lr=1e-3, beta_1=.9, beta_2=.999, epsilon=1e-8)
+
+model, history = train(model, optimizer, n_epochs=1000)
+ax = history.plot(x='epoch', kind='line', figsize=(12, 6))
+ax.get_figure().savefig('ch4_plot_5.png')
+
+print(history.testing_loss_full.min())
+```  
+
+```Console
+29.335590362548828
+```
+> ![Adam v2](/images/ch4_plot_5.png)      
+
+From now on, we will just use [`tf.keras.optimizers.Adam`](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Adam) whenever we are going to train a model.
+
+So we spent a lot time in optimizers in this chapter, along the way we looked at the effect of learning rate, normalization of the gradient values to prevent network collapse, and looked into the black box of how a few classic optimizer works. And we see all these has a positive impact on the training result, as our network is fitted much better compare to at the end of last chapter. Next we will look into Loss functions.
