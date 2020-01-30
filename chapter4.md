@@ -286,7 +286,7 @@ If we look at the learning curve, we see that after the initial huge drop, the p
 3. $$\theta \leftarrow  \theta + u$$
 </div>  
 
-The It is not too difficult to upgrade our gradient descent optimizer to add this feature.   
+It is not too difficult to upgrade our gradient descent optimizer to add this feature.   
 
 ```python  
 class Momentum(object):
@@ -308,7 +308,7 @@ class Momentum(object):
             var.assign_add(m)
 ```  
 
-What did here is to add a set of moment variables to accumulates gradients. We used a mapping to keep track of the association between variables and the accumulators.  
+What added a set of moment variables to accumulates gradients, and we used a mapping to keep track of the association between variables and the accumulators.  
 
 ```python
 model = MLP(4, 1)
