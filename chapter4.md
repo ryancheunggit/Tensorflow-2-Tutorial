@@ -305,7 +305,7 @@ print(history.testing_loss_full.min())
 > ```
 > ![stochastic gradient descent momentum training loss](/images/ch4_plot_4.png)    
 
-### 4. Second Momentum {#mv}
+### 4. Second Moment {#mv}
 As with the first moment of the gradients, second moment were also made use to guide optimization.
 The Adam optimizer looks like this in formula
 <div class='formula'>

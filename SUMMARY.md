@@ -21,5 +21,5 @@
     + [Gradient Descent](chapter4.md#gd)
     + [Stochastic Gradient Descent](chapter4.md#sgd)
     + [Momentum](chapter4.md#m)
-    + [Second Momentum](chapter4.md#mv)
+    + [Second Moment](chapter4.md#mv)
 5. [Loss Functions](chapter5.md)
