@@ -399,7 +399,7 @@ To implement a custom `tf.keras` optimizer, there are a few methods we need to i
 1. `_resource_apply_dense()` - this is the method used to perform parameter updates with dense gradient tensors.   
 2. `_resource_apply_sparse()` - above but works with sparse gradient tensors.   
 3. `_create_slots()` - optionally if the optimizer require more variables. If the optimizer only uses gradients and variables(like SGD), this is not needed.   
-4.` _get_config()` - optionally for save(serialize) / load(de-serialize) the optimizer with hyperparameters.   
+4. ` _get_config()` - optionally for save(serialize) / load(de-serialize) the optimizer with hyperparameters.   
 
 our `init_moments()` method roughly corresponds to the `_create_slots()` and our `apply_gradients()` method needs to be moved to `_resource_apply_dense()`. And since we have quite a few hyperparameters, we need to code up the `_get_config()` method too.   
 
